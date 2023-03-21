@@ -1,27 +1,26 @@
 package app.config;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.logout.LogoutHandler;
-import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import java.io.IOException;
 import java.util.Optional;
 
 @Slf4j
 @Configuration
 // 인증 인가 활성화
 @EnableWebSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
+
+    private final UserDetailsService userDetailsService;
 
     // TODO security 5 이상부터는 WebSecurityConfigurerAdapter 로 Setting 하지 않음
 
@@ -54,19 +53,19 @@ public class SecurityConfig {
                 )
                 // 인가 - FormLogin 인증 관련
                 .formLogin(login -> login
-//                                .loginPage("/loginPage")
-                                .defaultSuccessUrl("/")
-                                .failureUrl("/login")
+//                                .loginPage("/page/loginPage")
                                 .usernameParameter("userId")
                                 .passwordParameter("passWd")
                                 .loginProcessingUrl("/login-proc")
+                                .defaultSuccessUrl("/home")
+                                .failureUrl("/login")
 //                                .successHandler((request, response, authentication) -> {
 //                                    System.out.println("authentication = " + authentication.getName());
-//                                    response.sendRedirect("/");
+//                                    response.sendRedirect("/home");
 //                                })
 //                                .failureHandler((request, response, exception) -> {
 //                                    log.error("login error", exception);
-//                                    response.sendRedirect("/login");
+//                                    response.sendRedirect("/page/loginPage");
 //                                })
                                 // 인증을 받지 않아도 접근이 가능해야함
                                 .permitAll()
@@ -87,6 +86,39 @@ public class SecurityConfig {
                         .logoutSuccessHandler((request, response, authentication) -> {
                             response.sendRedirect("/login");
                         })
+                )
+                // refresh 기능
+                .rememberMe(remember -> remember
+                        .rememberMeParameter("remember")
+                        // 만료쿠키 시간 3600 초 1 시간
+                        .tokenValiditySeconds(3600)
+                        // 항상 remember 처리됨
+                        .alwaysRemember(false)
+                        // 시스템 사용자 계정 처리
+                        .userDetailsService(userDetailsService)
+                )
+                // 세션 관리 기능
+                .sessionManagement(session -> session
+                        // 최대 세션 허용 개수
+                        .maximumSessions(1)
+                        // default false : 기존 로그인 만료 cf) true : 기존 로그인 차단
+                        .maxSessionsPreventsLogin(false)
+                        // 세션 만료시
+//                        .expiredUrl("/login")
+                        .and()
+                        // 세션이 유효하지 않을때 -> 설정된 경우 만료시에도 적용됨.
+                        .invalidSessionUrl("/login")
+                        .sessionFixation()
+                                // 기본값 - 세션 고정 보호
+                                .changeSessionId()
+//                              .none()
+                        /**
+                         * 1. SessionCreationPolicy.ALWAYS - 스프링 시큐리티가 세션 항상 생성
+                         * 2. SessionCreationPolicy.IF_REQUIRED - 스프링 시큐리티가 세션 필요 시 생성
+                         * 3. SessionCreationPolicy.NEVER - 스프링 시큐리티가 세션 생성하지 않음 이미 존재하면 사
+                         * 4. SessionCreationPolicy.STATELESS - 스프링 시큐리티가 생성하지도 않고 존재해도 사용하지 않음
+                         */
+                        .sessionCreationPolicy(SessionCreationPolicy.ALWAYS)
                 )
 
         ;

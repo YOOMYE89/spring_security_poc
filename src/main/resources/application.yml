@@ -15,7 +15,18 @@ spring:
   security.user:
       name: user
       password: 1234
+  thymeleaf:
+    cache: false
 
 server:
   error.whitelabel.enabled: false
   port: 11002
+  ssl:
+    enable: false
+#    key-store: keystore.p12
+#    key-store-password: tngus12
+#    key-store-type: PKCS12
+#    key-alias: bns-ssl
+
+logging:
+  level.org.apache.coyote.http11: debug
