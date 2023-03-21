@@ -8,9 +8,7 @@ spring:
   application:
     name: Security
     desc: 통합인증
-  servlet.encoding.charset: UTF-8
   output.ansi.enabled: ALWAYS
-
   # 아이디 비밀번호
   security.user:
       name: user
@@ -19,8 +17,10 @@ spring:
     cache: false
 
 server:
+  servlet.encoding.charset: UTF-8
   error.whitelabel.enabled: false
   port: 11002
+
   ssl:
     enable: false
 #    key-store: keystore.p12
