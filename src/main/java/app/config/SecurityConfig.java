@@ -112,9 +112,6 @@ public class SecurityConfig {
                             response.sendRedirect("/login");
                         })
                 )
-
-
-
         ;
         return http.build();
     }
@@ -139,13 +136,15 @@ public class SecurityConfig {
         UserDetails sys = User.withDefaultPasswordEncoder()
                 .username("sys")
                 .password("1111")
-                .roles("SYS")
+                // TODO 권한 계층 구조를 통해서 처리해야함
+                .roles("SYS", "USER")
                 .build();
 
         UserDetails admin = User.withDefaultPasswordEncoder()
                 .username("admin")
                 .password("1111")
-                .roles("ADMIN")
+                // TODO 권한 계층 구조를 통해서 처리해야함
+                .roles("ADMIN","SYS","USER")
                 .build();
 
         return new InMemoryUserDetailsManager(user, sys, admin);
