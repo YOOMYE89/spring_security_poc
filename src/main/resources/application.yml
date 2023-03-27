@@ -9,6 +9,8 @@ spring:
     name: Security
     desc: 통합인증
   output.ansi.enabled: ALWAYS
+  thymeleaf.cache: false
+
   # 아이디 비밀번호
 #  security.user:
 #      name: user
