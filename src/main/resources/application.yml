@@ -10,9 +10,9 @@ spring:
     desc: 통합인증
   output.ansi.enabled: ALWAYS
   # 아이디 비밀번호
-  security.user:
-      name: user
-      password: 1234
+#  security.user:
+#      name: user
+#      password: 1234
 
 server:
   servlet.encoding.charset: UTF-8
