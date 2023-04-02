@@ -1,11 +1,15 @@
 package app.config.security;
 
+import app.handler.CustomAccessDeniedHandler;
+import app.handler.FailAuthenticationHandler;
+import app.handler.SuccessAuthenticationHandler;
 import app.service.AuthenticationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationDetailsSource;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
@@ -14,6 +18,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.AccessDeniedHandler;
 
 @Slf4j
 @EnableWebSecurity
@@ -24,6 +29,9 @@ public class SecurityConfig {
 //    private final UserService userService;
     private final AuthenticationService authenticationService;
     private final PasswordEncoder encoder;
+    private final AuthenticationDetailsSource authenticationDetailsSource;
+    private final SuccessAuthenticationHandler successAuthenticationHandler;
+    private final FailAuthenticationHandler failAuthenticationHandler;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity server) throws Exception {
@@ -34,7 +42,8 @@ public class SecurityConfig {
                 .authenticationProvider(authenticationService)
                 // 인증 대상
                 .authorizeRequests(request -> request
-                        .antMatchers("/", "/users").permitAll()
+                        //
+                        .antMatchers("/", "/users", "/login*").permitAll()
                         .antMatchers("/mypage").hasRole("USER")
                         .antMatchers("/messages").hasRole("MANAGER")
                         .antMatchers("/config").hasRole("ADMIN")
@@ -42,17 +51,30 @@ public class SecurityConfig {
                 )
 
                 // 인증 방식
-                .formLogin()
-                .and()
+                .formLogin(login -> login
+                        .loginPage("/login")
+                        .defaultSuccessUrl("/")
+                        .loginProcessingUrl("/login_proc")
+                        .permitAll()
+                        // 인증 정보 외 추가 정보 기입시
+                        .authenticationDetailsSource(authenticationDetailsSource)
+                        .successHandler(successAuthenticationHandler)
+                        .failureHandler(failAuthenticationHandler)
+                )
                 .exceptionHandling(exception -> exception
-                        .accessDeniedHandler((request, response, accessDeniedException) -> {
-                            response.sendRedirect("/denied");
-                        })
+                        .accessDeniedHandler(accessDeniedHandler())
                 )
 
         ;
 
         return server.build();
+    }
+
+    @Bean
+    public AccessDeniedHandler accessDeniedHandler() {
+        CustomAccessDeniedHandler customAccessDeniedHandler = new CustomAccessDeniedHandler();
+        customAccessDeniedHandler.setErrorPage("/denied");
+        return customAccessDeniedHandler;
     }
 
 

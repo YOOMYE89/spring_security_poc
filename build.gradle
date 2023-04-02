@@ -32,10 +32,10 @@ dependencies {
 	// 두 객체 간 맵핑
 	implementation 'org.modelmapper:modelmapper:2.3.0'
 
-	compileOnly 'com.h2database:h2'
+	runtimeOnly 'com.h2database:h2'
 	testCompileOnly 'com.h2database:h2'
 
-	compileOnly 'org.projectlombok:lombok'
+	runtimeOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
 
 	//테스트에서 lombok 사용

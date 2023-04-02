@@ -1,11 +1,13 @@
 package app.service;
 
+import app.domain.common.FormAuthenticationDetails;
 import app.domain.context.UserContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -34,6 +36,15 @@ public class AuthenticationService implements AuthenticationProvider {
         // password validate
         if (!encoder.matches(password, context.getPassword())) {
             throw new BadCredentialsException("Password is not matched");
+        }
+
+        FormAuthenticationDetails details = (FormAuthenticationDetails) authentication.getDetails();
+        String secretKey = details.getSecretKey();
+
+        System.out.println("secretKey = " + secretKey);
+
+        if (secretKey == null || !"secret".equals(secretKey)) {
+            throw new InsufficientAuthenticationException("secret key fail");
         }
 
         // 인증 후 인증정보 전달
