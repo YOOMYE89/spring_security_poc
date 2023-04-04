@@ -5,7 +5,6 @@ import io.security.corespringsecurity.security.service.AccountContext;
 import io.security.corespringsecurity.security.token.AjaxAuthenticationToken;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -18,7 +17,7 @@ import javax.transaction.Transactional;
 
 @Slf4j
 @RequiredArgsConstructor
-public class FormAuthenticationProvider implements AuthenticationProvider {
+public class AjaxAuthenticationProvider implements AuthenticationProvider {
 
     private final UserDetailsService userDetailsService;
     private final PasswordEncoder passwordEncoder;
@@ -36,16 +35,15 @@ public class FormAuthenticationProvider implements AuthenticationProvider {
             throw new BadCredentialsException("Invalid password");
         }
 
-        String secretKey = ((FormWebAuthenticationDetails) authentication.getDetails()).getSecretKey();
-        if (secretKey == null || !secretKey.equals("secret")) {
-            throw new IllegalArgumentException("Invalid Secret");
-        }
+//        String secretKey = ((FormWebAuthenticationDetails) authentication.getDetails()).getSecretKey();
+//        if (secretKey == null || !secretKey.equals("secret")) {
+//            throw new IllegalArgumentException("Invalid Secret");
+//        }
 
-        return new AjaxAuthenticationToken(accountContext.getAccount(), null, accountContext.getAuthorities());
+        return new UsernamePasswordAuthenticationToken(accountContext.getAccount(), null, accountContext.getAuthorities());
     }
-
     @Override
     public boolean supports(Class<?> authentication) {
-        return (UsernamePasswordAuthenticationToken.class.isAssignableFrom(authentication));
+        return (AjaxAuthenticationToken.class.isAssignableFrom(authentication));
     }
 }

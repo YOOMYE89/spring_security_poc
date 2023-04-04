@@ -2,7 +2,10 @@ package io.security.corespringsecurity.security.configs;
 
 import io.security.corespringsecurity.security.common.FormWebAuthenticationDetailsSource;
 import io.security.corespringsecurity.security.filter.AjaxLoginProcessingFilter;
+import io.security.corespringsecurity.security.handler.AjaxFailureHandler;
+import io.security.corespringsecurity.security.handler.AjaxSuccessHandler;
 import io.security.corespringsecurity.security.handler.FormAccessDeniedHandler;
+import io.security.corespringsecurity.security.provider.AjaxAuthenticationProvider;
 import io.security.corespringsecurity.security.provider.FormAuthenticationProvider;
 import io.security.corespringsecurity.security.service.UserDetailsServiceImpl;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +14,8 @@ import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -42,12 +47,11 @@ public class AppSecurityConfig {
     private final UserDetailsService userDetailsService;
 
     @Bean
+    @Order(1)
     public SecurityFilterChain securityFilterChain(HttpSecurity security) throws Exception {
 
         security
                 .csrf().disable()
-                .apply(new CustomDsl())
-                .and()
                 .authorizeRequests(request -> request
                         .antMatchers("/mypage").hasRole("USER")
                         .antMatchers("/messages").hasRole("MANAGER")
@@ -74,14 +78,36 @@ public class AppSecurityConfig {
         return security.build();
     }
 
+    @Bean
+    @Order(0)
+    public SecurityFilterChain ajaxFilterChain(HttpSecurity security) throws Exception {
+
+        security
+                .csrf().disable()
+                .apply(new CustomDsl())
+                .and()
+                .antMatcher("/api/**")
+                .authorizeRequests(request -> request
+                        .anyRequest().authenticated()
+                )
+
+        ;
+
+        return security.build();
+    }
+
     public class CustomDsl extends AbstractHttpConfigurer<CustomDsl, HttpSecurity> {
         @Override
         public void configure(HttpSecurity builder) throws Exception {
-
             AuthenticationManager authenticationManager = builder.getSharedObject(AuthenticationManager.class);
 
-            builder.addFilterBefore(new AjaxLoginProcessingFilter(authenticationManager), UsernamePasswordAuthenticationFilter.class);
-            builder.authenticationProvider(new FormAuthenticationProvider(userDetailsService, passwordEncoder()));
+            AjaxLoginProcessingFilter ajaxLoginProcessingFilter = new AjaxLoginProcessingFilter(authenticationManager);
+            ajaxLoginProcessingFilter.setAuthenticationSuccessHandler(new AjaxSuccessHandler());
+            ajaxLoginProcessingFilter.setAuthenticationFailureHandler(new AjaxFailureHandler());
+
+            builder.addFilterBefore(ajaxLoginProcessingFilter, UsernamePasswordAuthenticationFilter.class);
+            builder.authenticationProvider(new AjaxAuthenticationProvider(userDetailsService, passwordEncoder()));
+
         }
     }
 
