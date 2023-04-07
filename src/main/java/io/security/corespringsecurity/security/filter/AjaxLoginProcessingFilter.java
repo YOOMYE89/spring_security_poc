@@ -19,9 +19,9 @@ public class AjaxLoginProcessingFilter extends AbstractAuthenticationProcessingF
 
     private ObjectMapper objectMapper = new ObjectMapper();
 
-    public AjaxLoginProcessingFilter(AuthenticationManager authenticationManager) {
+    public AjaxLoginProcessingFilter() {
         // uri matcher 를 통한 Filter 동작
-        super(new AntPathRequestMatcher("/api/login"), authenticationManager);
+        super(new AntPathRequestMatcher("/api/login"));
     }
 
     @Override

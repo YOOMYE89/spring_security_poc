@@ -1,7 +1,9 @@
 package io.security.corespringsecurity.security.configs;
 
+import io.security.corespringsecurity.security.common.AjaxEntryPoint;
 import io.security.corespringsecurity.security.common.FormWebAuthenticationDetailsSource;
 import io.security.corespringsecurity.security.filter.AjaxLoginProcessingFilter;
+import io.security.corespringsecurity.security.handler.AjaxAccessDeniedHandler;
 import io.security.corespringsecurity.security.handler.AjaxFailureHandler;
 import io.security.corespringsecurity.security.handler.AjaxSuccessHandler;
 import io.security.corespringsecurity.security.handler.FormAccessDeniedHandler;
@@ -51,7 +53,7 @@ public class AppSecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity security) throws Exception {
 
         security
-                .csrf().disable()
+//                .csrf().disable()
                 .authorizeRequests(request -> request
                         .antMatchers("/mypage").hasRole("USER")
                         .antMatchers("/messages").hasRole("MANAGER")
@@ -88,7 +90,12 @@ public class AppSecurityConfig {
                 .and()
                 .antMatcher("/api/**")
                 .authorizeRequests(request -> request
+//                        .antMatchers("/api/message").hasRole("MANAGER")
                         .anyRequest().authenticated()
+                )
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(new AjaxEntryPoint())
+                        .accessDeniedHandler(new AjaxAccessDeniedHandler())
                 )
 
         ;
@@ -101,9 +108,10 @@ public class AppSecurityConfig {
         public void configure(HttpSecurity builder) throws Exception {
             AuthenticationManager authenticationManager = builder.getSharedObject(AuthenticationManager.class);
 
-            AjaxLoginProcessingFilter ajaxLoginProcessingFilter = new AjaxLoginProcessingFilter(authenticationManager);
+            AjaxLoginProcessingFilter ajaxLoginProcessingFilter = new AjaxLoginProcessingFilter();
             ajaxLoginProcessingFilter.setAuthenticationSuccessHandler(new AjaxSuccessHandler());
             ajaxLoginProcessingFilter.setAuthenticationFailureHandler(new AjaxFailureHandler());
+            ajaxLoginProcessingFilter.setAuthenticationManager(authenticationManager);
 
             builder.addFilterBefore(ajaxLoginProcessingFilter, UsernamePasswordAuthenticationFilter.class);
             builder.authenticationProvider(new AjaxAuthenticationProvider(userDetailsService, passwordEncoder()));
